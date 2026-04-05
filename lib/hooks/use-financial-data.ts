@@ -5,6 +5,7 @@ import type { MonthEntry } from "@/types";
 import {
   getMonthEntry,
   saveContribution,
+  deleteEntry,
   getAllEntries,
 } from "@/lib/storage/firestore";
 
@@ -40,5 +41,13 @@ export function useFinancialData() {
     [month, year, refresh],
   );
 
-  return { currentEntry, history, isLoaded, save, month, year };
+  const remove = useCallback(
+    async (targetMonth: number, targetYear: number) => {
+      await deleteEntry(targetMonth, targetYear);
+      await refresh();
+    },
+    [refresh],
+  );
+
+  return { currentEntry, history, isLoaded, save, remove, month, year };
 }

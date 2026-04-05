@@ -4,6 +4,7 @@ import {
   getDocs,
   getDoc,
   setDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import type { MonthEntry } from "@/types";
@@ -42,6 +43,10 @@ export async function saveContribution(
       contributions: { [email]: amount },
     });
   }
+}
+
+export async function deleteEntry(month: number, year: number): Promise<void> {
+  await deleteDoc(doc(getFirebaseDb(), COLLECTION, monthId(month, year)));
 }
 
 export async function getAllEntries(): Promise<MonthEntry[]> {

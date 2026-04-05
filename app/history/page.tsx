@@ -58,14 +58,18 @@ function MonthDetail({
   entry,
   email,
   onSave,
+  onDelete,
 }: {
   entry: MonthEntry;
   email: string;
   onSave: (amount: number, month: number, year: number) => Promise<void>;
+  onDelete: (month: number, year: number) => Promise<void>;
 }) {
   const [amount, setAmount] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const total = getTotal(entry.contributions);
   const pctTarget = Math.min(Math.round((total / DEFAULT_GOALS.target) * 100), 100);
@@ -182,13 +186,52 @@ function MonthDetail({
           );
         })}
       </div>
+
+      {/* Delete */}
+      <div className="pt-2 border-t">
+        {!confirmDelete ? (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+          >
+            Eliminar este mes
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-destructive font-medium flex-1">
+              Seguro? Se borrara para los dos.
+            </p>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-7 text-xs"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                await onDelete(entry.month, entry.year);
+                setDeleting(false);
+              }}
+            >
+              {deleting ? "..." : "Eliminar"}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs"
+              onClick={() => setConfirmDelete(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export default function HistoryPage() {
   const { user } = useAuth();
-  const { history, isLoaded, save } = useFinancialData();
+  const { history, isLoaded, save, remove } = useFinancialData();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [addingMonth, setAddingMonth] = useState(false);
   const [newMonthAmount, setNewMonthAmount] = useState("");
@@ -239,6 +282,11 @@ export default function HistoryPage() {
 
   async function handleSave(amount: number, month: number, year: number) {
     await save(email, amount, month, year);
+  }
+
+  async function handleDelete(month: number, year: number) {
+    await remove(month, year);
+    setExpanded(null);
   }
 
   async function handleAddPastMonth() {
@@ -448,7 +496,7 @@ export default function HistoryPage() {
 
                       {/* Expanded detail with edit */}
                       {isOpen && (
-                        <MonthDetail entry={entry} email={email} onSave={handleSave} />
+                        <MonthDetail entry={entry} email={email} onSave={handleSave} onDelete={handleDelete} />
                       )}
                     </CardContent>
                   </Card>
