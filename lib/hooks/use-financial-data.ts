@@ -1,52 +1,44 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { MonthlyFinancialEntry } from "@/types";
+import type { MonthEntry } from "@/types";
 import {
+  getMonthEntry,
+  saveContribution,
   getAllEntries,
-  saveEntry,
-  deleteEntry,
 } from "@/lib/storage/firestore";
 
 export function useFinancialData() {
-  const [entries, setEntries] = useState<MonthlyFinancialEntry[]>([]);
-  const [currentEntry, setCurrentEntry] =
-    useState<MonthlyFinancialEntry | null>(null);
+  const [currentEntry, setCurrentEntry] = useState<MonthEntry | null>(null);
+  const [history, setHistory] = useState<MonthEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const refresh = useCallback(async () => {
-    const sorted = await getAllEntries();
-    setEntries(sorted);
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
 
-    const now = new Date();
-    const current =
-      sorted.find(
-        (e) => e.month === now.getMonth() + 1 && e.year === now.getFullYear(),
-      ) ?? null;
-    setCurrentEntry(current);
-  }, []);
+  const refresh = useCallback(async () => {
+    const [entry, all] = await Promise.all([
+      getMonthEntry(month, year),
+      getAllEntries(),
+    ]);
+    setCurrentEntry(entry);
+    setHistory(all);
+  }, [month, year]);
 
   useEffect(() => {
     refresh()
-      .catch((err) => console.error("Failed to load entries:", err))
+      .catch((err) => console.error("Failed to load:", err))
       .finally(() => setIsLoaded(true));
   }, [refresh]);
 
   const save = useCallback(
-    async (entry: MonthlyFinancialEntry) => {
-      await saveEntry(entry);
+    async (email: string, amount: number) => {
+      await saveContribution(month, year, email, amount);
       await refresh();
     },
-    [refresh],
+    [month, year, refresh],
   );
 
-  const remove = useCallback(
-    async (month: number, year: number) => {
-      await deleteEntry(month, year);
-      await refresh();
-    },
-    [refresh],
-  );
-
-  return { entries, currentEntry, isLoaded, save, remove, refresh };
+  return { currentEntry, history, isLoaded, save, month, year };
 }

@@ -4,42 +4,51 @@ import {
   getDocs,
   getDoc,
   setDoc,
-  deleteDoc,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
-import type { MonthlyFinancialEntry } from "@/types";
+import type { MonthEntry } from "@/types";
 
 const COLLECTION = "entries";
 
-function entryDoc(month: number, year: number) {
-  return doc(getFirebaseDb(), COLLECTION, `${year}-${month}`);
+function monthId(month: number, year: number) {
+  return `${year}-${month}`;
 }
 
-export async function getAllEntries(): Promise<MonthlyFinancialEntry[]> {
+export async function getMonthEntry(month: number, year: number): Promise<MonthEntry | null> {
+  const snap = await getDoc(doc(getFirebaseDb(), COLLECTION, monthId(month, year)));
+  return snap.exists() ? (snap.data() as MonthEntry) : null;
+}
+
+export async function saveContribution(
+  month: number,
+  year: number,
+  email: string,
+  amount: number,
+): Promise<void> {
+  const id = monthId(month, year);
+  const ref = doc(getFirebaseDb(), COLLECTION, id);
+  const existing = await getDoc(ref);
+
+  if (existing.exists()) {
+    const data = existing.data() as MonthEntry;
+    await setDoc(ref, {
+      ...data,
+      contributions: { ...data.contributions, [email]: amount },
+    });
+  } else {
+    await setDoc(ref, {
+      month,
+      year,
+      contributions: { [email]: amount },
+    });
+  }
+}
+
+export async function getAllEntries(): Promise<MonthEntry[]> {
   const snap = await getDocs(collection(getFirebaseDb(), COLLECTION));
-  const entries = snap.docs.map((d) => d.data() as MonthlyFinancialEntry);
+  const entries = snap.docs.map((d) => d.data() as MonthEntry);
   return entries.sort((a, b) => {
     if (a.year !== b.year) return b.year - a.year;
     return b.month - a.month;
   });
-}
-
-export async function getEntry(
-  month: number,
-  year: number,
-): Promise<MonthlyFinancialEntry | null> {
-  const snap = await getDoc(entryDoc(month, year));
-  return snap.exists() ? (snap.data() as MonthlyFinancialEntry) : null;
-}
-
-export async function saveEntry(entry: MonthlyFinancialEntry): Promise<void> {
-  const ref = entryDoc(entry.month, entry.year);
-  await setDoc(ref, { ...entry, updatedAt: new Date().toISOString() });
-}
-
-export async function deleteEntry(
-  month: number,
-  year: number,
-): Promise<void> {
-  await deleteDoc(entryDoc(month, year));
 }
