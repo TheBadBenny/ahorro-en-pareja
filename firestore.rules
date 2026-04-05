@@ -1,14 +1,12 @@
 rules_version = '2';
 
-// Copy these rules to Firebase Console > Firestore > Rules
-// Replace the emails with yours
 service cloud.firestore {
   match /databases/{database}/documents {
     function isAllowedUser() {
       return request.auth != null
         && request.auth.token.email in [
-          'tu@gmail.com',
-          'tunovia@gmail.com'
+          'pedropalacioestrada@gmail.com',
+          'aangelap19198@gmail.com'
         ];
     }
 

@@ -18,23 +18,16 @@ Aplicacion web de seguimiento financiero personal para parejas, centrada en obje
 
 ## Como ejecutar
 
-### 1. Crear proyecto en Firebase
+### 1. Firebase (ya configurado)
 
-1. Ve a [Firebase Console](https://console.firebase.google.com/) y crea un proyecto
-2. Activa **Authentication** > Sign-in method > Google
-3. Activa **Cloud Firestore** > Crear base de datos (modo produccion)
-4. Copia las reglas de seguridad de `firestore.rules` al panel de Firestore > Rules (reemplaza los emails)
-5. En Project Settings, copia la configuracion web
+El proyecto usa Firebase Auth (Google) + Cloud Firestore. La config esta en el codigo
+(las API keys de Firebase son publicas; la seguridad viene de las Firestore Rules).
 
-### 2. Configurar variables de entorno
+Si necesitas reconfigurar:
+1. Firebase Console > Authentication > Settings > Authorized domains > anade `thebadbenny.github.io`
+2. Firebase Console > Firestore > Rules > pega el contenido de `firestore.rules`
 
-```bash
-cp .env.local.example .env.local
-```
-
-Rellena `.env.local` con los valores de Firebase y los emails permitidos.
-
-### 3. Ejecutar
+### 2. Ejecutar
 
 ```bash
 npm install

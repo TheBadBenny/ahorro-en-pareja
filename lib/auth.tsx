@@ -25,10 +25,10 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null);
 
-const allowedEmails = (process.env.NEXT_PUBLIC_ALLOWED_EMAILS ?? "")
-  .split(",")
-  .map((e) => e.trim().toLowerCase())
-  .filter(Boolean);
+const allowedEmails = [
+  "pedropalacioestrada@gmail.com",
+  "aangelap19198@gmail.com",
+];
 
 function isEmailAllowed(email: string | null): boolean {
   if (!email) return false;

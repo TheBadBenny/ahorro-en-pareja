@@ -3,12 +3,12 @@ import { getAuth, GoogleAuthProvider, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyAO1yB1knsFH2YBZf1g8g1QQymLf0cqi78",
+  authDomain: "ap-acco.firebaseapp.com",
+  projectId: "ap-acco",
+  storageBucket: "ap-acco.firebasestorage.app",
+  messagingSenderId: "465222962584",
+  appId: "1:465222962584:web:9486ae153e04483243efed",
 };
 
 let _app: FirebaseApp | null = null;
@@ -17,7 +17,8 @@ let _db: Firestore | null = null;
 
 function getApp(): FirebaseApp {
   if (!_app) {
-    _app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    _app =
+      getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
   }
   return _app;
 }
