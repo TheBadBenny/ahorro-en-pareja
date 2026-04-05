@@ -3,6 +3,7 @@
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PigButtIcon } from "@/components/icons/pig-butt";
 
 export function LoginScreen() {
   const { signInWithGoogle, error } = useAuth();
@@ -11,7 +12,7 @@ export function LoginScreen() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-background p-4">
       <Card className="w-full max-w-xs shadow-xl shadow-primary/5">
         <CardContent className="flex flex-col items-center gap-7 p-8">
-          <span className="text-6xl" role="img" aria-label="culete">🐷</span>
+          <PigButtIcon className="h-20 w-20" />
 
           <div className="text-center">
             <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-tight">

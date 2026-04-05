@@ -4,6 +4,7 @@ import { Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/hooks/use-theme";
 import { useAuth } from "@/lib/auth";
+import { PigButtIcon } from "@/components/icons/pig-butt";
 import Link from "next/link";
 
 export function Header() {
@@ -14,7 +15,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl" role="img" aria-label="culete">🐷</span>
+          <PigButtIcon className="h-8 w-8" />
           <span className="font-[family-name:var(--font-display)] text-base font-bold tracking-tight">
             Culete
           </span>
