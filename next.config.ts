@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "export",
+  basePath: process.env.PAGES === "true" ? "/ahorro-en-pareja" : "",
+  images: { unoptimized: true },
 };
 
 export default nextConfig;
