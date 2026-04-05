@@ -8,7 +8,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   // Register service worker
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
+      const base = document.querySelector("meta[name='next-base-path']")?.getAttribute("content") ?? "";
+      navigator.serviceWorker.register(`${base}/sw.js`).catch(() => {});
     }
   }, []);
 

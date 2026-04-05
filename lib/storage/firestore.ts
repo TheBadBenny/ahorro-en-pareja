@@ -5,8 +5,6 @@ import {
   getDoc,
   setDoc,
   deleteDoc,
-  query,
-  orderBy,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/lib/firebase";
 import type { MonthlyFinancialEntry } from "@/types";
@@ -18,9 +16,12 @@ function entryDoc(month: number, year: number) {
 }
 
 export async function getAllEntries(): Promise<MonthlyFinancialEntry[]> {
-  const q = query(collection(getFirebaseDb(), COLLECTION), orderBy("year", "desc"), orderBy("month", "desc"));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data() as MonthlyFinancialEntry);
+  const snap = await getDocs(collection(getFirebaseDb(), COLLECTION));
+  const entries = snap.docs.map((d) => d.data() as MonthlyFinancialEntry);
+  return entries.sort((a, b) => {
+    if (a.year !== b.year) return b.year - a.year;
+    return b.month - a.month;
+  });
 }
 
 export async function getEntry(

@@ -27,7 +27,9 @@ export function useFinancialData() {
   }, []);
 
   useEffect(() => {
-    refresh().then(() => setIsLoaded(true));
+    refresh()
+      .catch((err) => console.error("Failed to load entries:", err))
+      .finally(() => setIsLoaded(true));
   }, [refresh]);
 
   const save = useCallback(
