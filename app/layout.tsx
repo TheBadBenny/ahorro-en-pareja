@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Ahorro en Pareja",
   description: "Seguimiento financiero para parejas. Objetivos de ahorro, patrimonio y progreso mensual.",
-  manifest: "/manifest.json",
+  manifest: "/ahorro-en-pareja/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -46,7 +46,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <link rel="apple-touch-icon" href="/ahorro-en-pareja/icons/icon-192.png" />
       </head>
       <body className="min-h-full bg-background text-foreground">
         <Providers>{children}</Providers>
