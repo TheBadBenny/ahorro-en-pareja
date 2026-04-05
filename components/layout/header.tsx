@@ -11,35 +11,26 @@ export function Header() {
   const { user, signOut } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <PiggyBank className="h-5 w-5 text-primary-foreground" />
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
+      <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-sm">
+            <PiggyBank className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="hidden text-lg font-bold tracking-tight sm:block">
-            Ahorro en Pareja
+          <span className="font-[family-name:var(--font-display)] text-base font-bold tracking-tight">
+            Ahorro
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-0.5">
           <Button variant="ghost" size="sm" render={<Link href="/" />}>
-            Dashboard
+            Hoy
           </Button>
           <Button variant="ghost" size="sm" render={<Link href="/history" />}>
-            Historico
+            Meses
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggle}
-            aria-label="Cambiar tema"
-          >
-            {theme === "dark" ? (
-              <Sun className="h-4 w-4" />
-            ) : (
-              <Moon className="h-4 w-4" />
-            )}
+          <Button variant="ghost" size="icon" onClick={toggle} aria-label="Tema">
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
           {user && (
             <>
@@ -47,17 +38,12 @@ export function Header() {
                 <img
                   src={user.photoURL}
                   alt=""
-                  className="h-7 w-7 rounded-full"
+                  className="h-6 w-6 rounded-full ring-1 ring-border"
                   referrerPolicy="no-referrer"
                 />
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={signOut}
-                aria-label="Cerrar sesion"
-              >
-                <LogOut className="h-4 w-4" />
+              <Button variant="ghost" size="icon" onClick={signOut} aria-label="Salir">
+                <LogOut className="h-3.5 w-3.5" />
               </Button>
             </>
           )}

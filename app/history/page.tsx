@@ -6,16 +6,40 @@ import {
   getMonthName,
   getTotal,
   getGoalStatus,
-  getStatusEmoji,
+  getStatusLabel,
 } from "@/lib/calculations";
 import { DEFAULT_GOALS } from "@/types";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Cell,
+  ReferenceLine,
+  CartesianGrid,
+  Tooltip,
+} from "recharts";
 
 const NAMES: Record<string, string> = {
   "pedropalacioestrada@gmail.com": "Pedro",
   "aangelap19198@gmail.com": "Angela",
+};
+
+const statusColors: Record<string, string> = {
+  above: "text-emerald-500 bg-emerald-500/10",
+  "on-track": "text-emerald-500 bg-emerald-500/10",
+  "slightly-below": "text-amber-500 bg-amber-500/10",
+  below: "text-red-500 bg-red-500/10",
+};
+
+const barColors: Record<string, string> = {
+  above: "hsl(155, 70%, 45%)",
+  "on-track": "hsl(155, 70%, 45%)",
+  "slightly-below": "hsl(38, 92%, 50%)",
+  below: "hsl(0, 72%, 51%)",
 };
 
 export default function HistoryPage() {
@@ -29,55 +53,131 @@ export default function HistoryPage() {
     );
   }
 
+  const chartData = [...history]
+    .reverse()
+    .map((entry) => {
+      const total = getTotal(entry.contributions);
+      const status = getGoalStatus(total, 0);
+      return {
+        name: getMonthName(entry.month).slice(0, 3),
+        total,
+        status,
+      };
+    });
+
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-lg px-4 py-6 space-y-5">
-        <h1 className="text-center text-lg font-semibold text-muted-foreground">
+      <main className="mx-auto max-w-lg px-4 pb-10 pt-4 space-y-4">
+        <h1 className="text-center font-[family-name:var(--font-display)] text-xl font-bold tracking-tight">
           Historico
         </h1>
 
         {history.length === 0 ? (
-          <p className="text-center text-muted-foreground text-sm">
+          <p className="text-center text-muted-foreground text-sm py-10">
             Todavia no hay datos.
           </p>
         ) : (
-          <div className="space-y-3">
-            {history.map((entry) => {
-              const total = getTotal(entry.contributions);
-              const pct = Math.min(
-                Math.round((total / DEFAULT_GOALS.target) * 100),
-                100,
-              );
-              const status = getGoalStatus(total, 0);
+          <>
+            {/* Chart */}
+            {chartData.length >= 2 && (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Evolucion
+                  </p>
+                  <div className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 11 }}
+                          className="fill-muted-foreground"
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 10 }}
+                          className="fill-muted-foreground"
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(v) => `${(v / 1000).toFixed(1)}k`}
+                        />
+                        <Tooltip
+                          formatter={(value) => [formatCurrency(Number(value)), "Total"]}
+                          contentStyle={{
+                            borderRadius: "10px",
+                            border: "1px solid hsl(var(--border))",
+                            backgroundColor: "hsl(var(--card))",
+                            color: "hsl(var(--card-foreground))",
+                            fontSize: "13px",
+                          }}
+                        />
+                        <ReferenceLine
+                          y={DEFAULT_GOALS.target}
+                          stroke="hsl(var(--primary))"
+                          strokeDasharray="4 4"
+                          strokeOpacity={0.5}
+                        />
+                        <Bar dataKey="total" radius={[6, 6, 0, 0]} maxBarSize={36}>
+                          {chartData.map((entry, i) => (
+                            <Cell key={i} fill={barColors[entry.status]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-              return (
-                <Card key={`${entry.year}-${entry.month}`}>
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold capitalize">
-                        {getMonthName(entry.month)} {entry.year}
-                      </span>
-                      <span className="text-sm">
-                        {getStatusEmoji(status)} {formatCurrency(total)}
-                      </span>
-                    </div>
-                    <Progress value={pct} className="h-2" />
-                    <div className="flex gap-4 text-xs text-muted-foreground">
-                      {Object.entries(entry.contributions).map(
-                        ([email, amount]) => (
-                          <span key={email}>
-                            {NAMES[email] ?? email.split("@")[0]}:{" "}
-                            {formatCurrency(amount)}
+            {/* Month list */}
+            <div className="space-y-2.5">
+              {history.map((entry) => {
+                const total = getTotal(entry.contributions);
+                const pct = Math.min(Math.round((total / DEFAULT_GOALS.target) * 100), 100);
+                const status = getGoalStatus(total, 0);
+                return (
+                  <Card key={`${entry.year}-${entry.month}`}>
+                    <CardContent className="p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-[family-name:var(--font-display)] font-bold capitalize">
+                          {getMonthName(entry.month)} {entry.year}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColors[status]}`}>
+                            {getStatusLabel(status)}
                           </span>
-                        ),
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                          <span className="font-[family-name:var(--font-display)] text-lg font-bold tabular-nums">
+                            {formatCurrency(total)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        {Object.entries(entry.contributions).map(
+                          ([personEmail, personAmount]) => (
+                            <span key={personEmail}>
+                              {NAMES[personEmail] ?? personEmail.split("@")[0]}:{" "}
+                              <span className="font-medium text-foreground">
+                                {formatCurrency(personAmount)}
+                              </span>
+                            </span>
+                          ),
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </>
         )}
       </main>
     </>
