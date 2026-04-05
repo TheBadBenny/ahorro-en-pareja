@@ -191,6 +191,22 @@ export default function HistoryPage() {
   const [selectedPastMonth, setSelectedPastMonth] = useState("");
   const [addingSaving, setAddingSaving] = useState(false);
 
+  // All hooks must be above the early return
+  const missingMonths = useMemo(() => {
+    const now = new Date();
+    const existingKeys = new Set(history.map((e) => `${e.year}-${e.month}`));
+    const missing: { month: number; year: number; label: string }[] = [];
+    for (let i = 1; i <= 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const m = d.getMonth() + 1;
+      const y = d.getFullYear();
+      if (!existingKeys.has(`${y}-${m}`)) {
+        missing.push({ month: m, year: y, label: `${getMonthName(m)} ${y}` });
+      }
+    }
+    return missing;
+  }, [history]);
+
   if (!isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -220,22 +236,6 @@ export default function HistoryPage() {
   async function handleSave(amount: number, month: number, year: number) {
     await save(email, amount, month, year);
   }
-
-  // Calculate which past months are missing (last 12 months)
-  const missingMonths = useMemo(() => {
-    const now = new Date();
-    const existingKeys = new Set(history.map((e) => `${e.year}-${e.month}`));
-    const missing: { month: number; year: number; label: string }[] = [];
-    for (let i = 1; i <= 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const m = d.getMonth() + 1;
-      const y = d.getFullYear();
-      if (!existingKeys.has(`${y}-${m}`)) {
-        missing.push({ month: m, year: y, label: `${getMonthName(m)} ${y}` });
-      }
-    }
-    return missing;
-  }, [history]);
 
   async function handleAddPastMonth() {
     if (!selectedPastMonth || !newMonthAmount) return;
