@@ -57,3 +57,32 @@ export function getDaysRemainingInMonth(): number {
 export function getTotal(contributions: Record<string, number>): number {
   return Object.values(contributions).reduce((sum, v) => sum + v, 0);
 }
+
+export function getYearlyTotal(
+  history: { month: number; year: number; contributions: Record<string, number> }[],
+  year: number,
+): number {
+  return history
+    .filter((e) => e.year === year)
+    .reduce((sum, e) => sum + getTotal(e.contributions), 0);
+}
+
+export function getYearlyCumulative(
+  history: { month: number; year: number; contributions: Record<string, number> }[],
+  year: number,
+): { month: string; cumulative: number; monthly: number }[] {
+  const yearEntries = history
+    .filter((e) => e.year === year)
+    .sort((a, b) => a.month - b.month);
+
+  let cumulative = 0;
+  return yearEntries.map((e) => {
+    const monthly = getTotal(e.contributions);
+    cumulative += monthly;
+    return {
+      month: getMonthName(e.month).slice(0, 3),
+      cumulative,
+      monthly,
+    };
+  });
+}

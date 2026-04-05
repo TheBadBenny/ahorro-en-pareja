@@ -9,13 +9,15 @@ import {
   getTotal,
   getGoalStatus,
   getStatusLabel,
+  getYearlyTotal,
+  getYearlyCumulative,
 } from "@/lib/calculations";
-import { DEFAULT_GOALS, type MonthEntry } from "@/types";
+import { DEFAULT_GOALS, ANNUAL_GOAL, type MonthEntry } from "@/types";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Check, Plus } from "lucide-react";
+import { ChevronDown, Check, Plus, Flag } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -29,6 +31,8 @@ import {
   RadialBarChart,
   RadialBar,
   PolarAngleAxis,
+  AreaChart,
+  Area,
 } from "recharts";
 
 const NAMES: Record<string, string> = {
@@ -264,6 +268,92 @@ export default function HistoryPage() {
           </p>
         ) : (
           <>
+            {/* Annual goal */}
+            {(() => {
+              const currentYear = new Date().getFullYear();
+              const yearlyTotal = getYearlyTotal(history, currentYear);
+              const yearlyPct = Math.min(Math.round((yearlyTotal / ANNUAL_GOAL) * 100), 100);
+              const yearlyRemaining = Math.max(ANNUAL_GOAL - yearlyTotal, 0);
+              const cumulativeData = getYearlyCumulative(history, currentYear);
+              const idealPace = cumulativeData.map((d, i) => ({
+                ...d,
+                ideal: Math.round((ANNUAL_GOAL / 12) * (i + 1)),
+              }));
+
+              return (
+                <Card>
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Flag className="h-4 w-4 text-primary" />
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Meta {currentYear}: {formatCurrency(ANNUAL_GOAL)}
+                        </p>
+                      </div>
+                      <span className="font-[family-name:var(--font-display)] text-sm font-bold tabular-nums">
+                        {yearlyPct}%
+                      </span>
+                    </div>
+
+                    <div className="relative">
+                      <div className="h-5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-emerald-500 transition-all duration-700 ease-out"
+                          style={{ width: `${yearlyPct}%` }}
+                        />
+                      </div>
+                      {[25, 50, 75].map((p) => (
+                        <div key={p} className="absolute top-0 h-5 w-px bg-background/60" style={{ left: `${p}%` }} />
+                      ))}
+                    </div>
+
+                    <div className="flex justify-between text-xs">
+                      <span className="font-[family-name:var(--font-display)] text-lg font-bold">
+                        {formatCurrency(yearlyTotal)}
+                      </span>
+                      <span className="text-muted-foreground self-end">
+                        faltan {formatCurrency(yearlyRemaining)}
+                      </span>
+                    </div>
+
+                    {cumulativeData.length >= 2 && (
+                      <div className="h-[160px] pt-2">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={idealPace} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="gradCumulH" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                            <XAxis dataKey="month" tick={{ fontSize: 10 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                            <Tooltip
+                              formatter={(value, name) => [
+                                formatCurrency(Number(value)),
+                                name === "cumulative" ? "Acumulado" : "Ritmo ideal",
+                              ]}
+                              contentStyle={{
+                                borderRadius: "10px",
+                                border: "1px solid hsl(var(--border))",
+                                backgroundColor: "hsl(var(--card))",
+                                color: "hsl(var(--card-foreground))",
+                                fontSize: "12px",
+                              }}
+                            />
+                            <ReferenceLine y={ANNUAL_GOAL} stroke="hsl(155, 70%, 45%)" strokeDasharray="4 4" strokeOpacity={0.4} />
+                            <Area type="monotone" dataKey="ideal" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={1.5} fill="none" dot={false} />
+                            <Area type="monotone" dataKey="cumulative" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#gradCumulH)" dot={{ r: 3, fill: "hsl(var(--primary))" }} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
             {/* Evolution chart */}
             {chartData.length >= 2 && (
               <Card>

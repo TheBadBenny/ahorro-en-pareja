@@ -17,3 +17,5 @@ export const DEFAULT_GOALS: SavingsGoals = {
 };
 
 export type GoalStatus = "above" | "on-track" | "slightly-below" | "below";
+
+export const ANNUAL_GOAL = 40000;

@@ -10,18 +10,27 @@ import {
   getGoalStatus,
   getStatusLabel,
   getTotal,
+  getYearlyTotal,
+  getYearlyCumulative,
 } from "@/lib/calculations";
-import { DEFAULT_GOALS } from "@/types";
+import { DEFAULT_GOALS, ANNUAL_GOAL } from "@/types";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Check, TrendingUp, TrendingDown, CalendarDays } from "lucide-react";
+import { Check, TrendingUp, TrendingDown, CalendarDays, Flag } from "lucide-react";
 import {
   RadialBarChart,
   RadialBar,
   PolarAngleAxis,
   ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ReferenceLine,
+  Tooltip,
 } from "recharts";
 
 const NAMES: Record<string, string> = {
@@ -42,7 +51,7 @@ const statusConfig = {
 
 export default function Home() {
   const { user } = useAuth();
-  const { currentEntry, isLoaded, save, month, year } = useFinancialData();
+  const { currentEntry, history, isLoaded, save, month, year } = useFinancialData();
   const [amount, setAmount] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -66,6 +75,20 @@ export default function Home() {
   const diff = total - DEFAULT_GOALS.target;
 
   const chartData = [{ value: pctTarget, fill: sc.chart }];
+
+  // Annual
+  const yearlyTotal = getYearlyTotal(history, year);
+  const yearlyPct = Math.min(Math.round((yearlyTotal / ANNUAL_GOAL) * 100), 100);
+  const yearlyRemaining = Math.max(ANNUAL_GOAL - yearlyTotal, 0);
+  const monthsLeft = 12 - month + 1;
+  const monthlyNeeded = monthsLeft > 0 ? Math.ceil(yearlyRemaining / monthsLeft) : 0;
+  const cumulativeData = getYearlyCumulative(history, year);
+
+  // Ideal pace line: where you should be each month
+  const idealPace = cumulativeData.map((d, i) => ({
+    ...d,
+    ideal: Math.round((ANNUAL_GOAL / 12) * (i + 1)),
+  }));
 
   async function handleSave() {
     const value = parseFloat(amount);
@@ -94,7 +117,6 @@ export default function Home() {
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             <div className="relative flex flex-col items-center px-6 pt-6 pb-5">
-              {/* Subtle gradient bg */}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/[0.04] to-transparent" />
 
               <div className="relative h-[200px] w-[200px]">
@@ -110,18 +132,14 @@ export default function Home() {
                     barSize={12}
                   >
                     <PolarAngleAxis type="number" domain={[0, 100]} tick={false} angleAxisId={0} />
-                    <RadialBar
-                      dataKey="value"
-                      cornerRadius={12}
-                      background={{ fill: "hsl(var(--muted))" }}
-                    />
+                    <RadialBar dataKey="value" cornerRadius={12} background={{ fill: "hsl(var(--muted))" }} />
                   </RadialBarChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="font-[family-name:var(--font-display)] text-4xl font-extrabold tracking-tight">
                     {pctTarget}%
                   </span>
-                  <span className="text-xs text-muted-foreground">del objetivo</span>
+                  <span className="text-xs text-muted-foreground">del objetivo mensual</span>
                 </div>
               </div>
 
@@ -139,6 +157,108 @@ export default function Home() {
                 </span>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Annual goal */}
+        <Card>
+          <CardContent className="p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flag className="h-4 w-4 text-primary" />
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Meta anual {formatCurrency(ANNUAL_GOAL)}
+                </p>
+              </div>
+              <span className="font-[family-name:var(--font-display)] text-sm font-bold tabular-nums">
+                {yearlyPct}%
+              </span>
+            </div>
+
+            {/* Big progress bar */}
+            <div className="relative">
+              <div className="h-5 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-emerald-500 transition-all duration-700 ease-out"
+                  style={{ width: `${yearlyPct}%` }}
+                />
+              </div>
+              {/* Milestone markers */}
+              {[25, 50, 75].map((pct) => (
+                <div
+                  key={pct}
+                  className="absolute top-0 h-5 w-px bg-background/60"
+                  style={{ left: `${pct}%` }}
+                />
+              ))}
+            </div>
+
+            <div className="flex justify-between text-xs">
+              <span className="font-[family-name:var(--font-display)] text-lg font-bold">
+                {formatCurrency(yearlyTotal)}
+              </span>
+              <span className="text-muted-foreground self-end">
+                de {formatCurrency(ANNUAL_GOAL)}
+              </span>
+            </div>
+
+            {yearlyRemaining > 0 && (
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span>Faltan <span className="font-semibold text-foreground">{formatCurrency(yearlyRemaining)}</span></span>
+                <span>&middot;</span>
+                <span><span className="font-semibold text-foreground">{formatCurrency(monthlyNeeded)}</span>/mes necesarios</span>
+              </div>
+            )}
+
+            {/* Cumulative area chart */}
+            {cumulativeData.length >= 2 && (
+              <div className="h-[140px] pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={idealPace} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="gradCumul" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                    <XAxis dataKey="month" tick={{ fontSize: 10 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                    <Tooltip
+                      formatter={(value, name) => [
+                        formatCurrency(Number(value)),
+                        name === "cumulative" ? "Acumulado" : "Ritmo ideal",
+                      ]}
+                      contentStyle={{
+                        borderRadius: "10px",
+                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "hsl(var(--card))",
+                        color: "hsl(var(--card-foreground))",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <ReferenceLine y={ANNUAL_GOAL} stroke="hsl(155, 70%, 45%)" strokeDasharray="4 4" strokeOpacity={0.4} />
+                    <Area
+                      type="monotone"
+                      dataKey="ideal"
+                      stroke="hsl(var(--muted-foreground))"
+                      strokeDasharray="4 4"
+                      strokeWidth={1.5}
+                      fill="none"
+                      dot={false}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="cumulative"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2.5}
+                      fill="url(#gradCumul)"
+                      dot={{ r: 3, fill: "hsl(var(--primary))" }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -163,11 +283,11 @@ export default function Home() {
           })}
         </div>
 
-        {/* Goals */}
+        {/* Monthly Goals */}
         <Card>
           <CardContent className="p-5 space-y-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Objetivos
+              Objetivos mensuales
             </p>
             {[
               { label: "Minimo", goal: DEFAULT_GOALS.minimum, color: "bg-amber-400" },
@@ -216,9 +336,7 @@ export default function Home() {
             </p>
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                  €
-                </span>
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">€</span>
                 <Input
                   type="number"
                   inputMode="decimal"
@@ -243,7 +361,6 @@ export default function Home() {
           </CardContent>
         </Card>
 
-        {/* Footer info */}
         {daysLeft > 0 && (
           <p className="text-center text-xs text-muted-foreground">
             {daysLeft} dias restantes en el mes
