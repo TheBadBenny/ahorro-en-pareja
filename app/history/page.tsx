@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useFinancialData } from "@/lib/hooks/use-financial-data";
 import {
   formatCurrency,
@@ -8,9 +9,10 @@ import {
   getGoalStatus,
   getStatusLabel,
 } from "@/lib/calculations";
-import { DEFAULT_GOALS } from "@/types";
+import { DEFAULT_GOALS, type MonthEntry } from "@/types";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
+import { ChevronDown } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -21,6 +23,9 @@ import {
   ReferenceLine,
   CartesianGrid,
   Tooltip,
+  RadialBarChart,
+  RadialBar,
+  PolarAngleAxis,
 } from "recharts";
 
 const NAMES: Record<string, string> = {
@@ -42,8 +47,91 @@ const barColors: Record<string, string> = {
   below: "hsl(0, 72%, 51%)",
 };
 
+function MonthDetail({ entry }: { entry: MonthEntry }) {
+  const total = getTotal(entry.contributions);
+  const pctTarget = Math.min(Math.round((total / DEFAULT_GOALS.target) * 100), 100);
+  const status = getGoalStatus(total, 0);
+  const chartFill = barColors[status];
+
+  return (
+    <div className="mt-3 space-y-4 border-t pt-4">
+      {/* Radial + total */}
+      <div className="flex items-center gap-4">
+        <div className="relative h-[100px] w-[100px] shrink-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadialBarChart
+              cx="50%"
+              cy="50%"
+              innerRadius="72%"
+              outerRadius="100%"
+              startAngle={90}
+              endAngle={-270}
+              data={[{ value: pctTarget, fill: chartFill }]}
+              barSize={10}
+            >
+              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} angleAxisId={0} />
+              <RadialBar dataKey="value" cornerRadius={10} background={{ fill: "hsl(var(--muted))" }} />
+            </RadialBarChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-[family-name:var(--font-display)] text-lg font-extrabold">
+              {pctTarget}%
+            </span>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <p className="font-[family-name:var(--font-display)] text-2xl font-bold">
+            {formatCurrency(total)}
+          </p>
+          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColors[status]}`}>
+            {getStatusLabel(status)}
+          </span>
+        </div>
+      </div>
+
+      {/* Per-person */}
+      <div className="grid grid-cols-2 gap-3">
+        {Object.entries(NAMES).map(([email, name]) => (
+          <div key={email} className="rounded-lg bg-muted/50 p-3 text-center">
+            <p className="text-xs text-muted-foreground">{name}</p>
+            <p className="mt-0.5 font-[family-name:var(--font-display)] text-lg font-bold">
+              {formatCurrency(entry.contributions[email] ?? 0)}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Goals breakdown */}
+      <div className="space-y-2">
+        {[
+          { label: "Minimo", goal: DEFAULT_GOALS.minimum, color: "bg-amber-400" },
+          { label: "Recomendado", goal: DEFAULT_GOALS.target, color: "bg-primary" },
+          { label: "Comodo", goal: DEFAULT_GOALS.comfortable, color: "bg-emerald-500" },
+        ].map(({ label, goal, color }) => {
+          const pct = Math.min(Math.round((total / goal) * 100), 100);
+          const reached = total >= goal;
+          return (
+            <div key={label} className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span>
+                  {label} <span className="text-muted-foreground">{formatCurrency(goal)}</span>
+                </span>
+                <span className="font-semibold">{reached ? "✓" : `${pct}%`}</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function HistoryPage() {
   const { history, isLoaded } = useFinancialData();
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   if (!isLoaded) {
     return (
@@ -65,6 +153,10 @@ export default function HistoryPage() {
       };
     });
 
+  function toggleExpand(key: string) {
+    setExpanded((prev) => (prev === key ? null : key));
+  }
+
   return (
     <>
       <Header />
@@ -79,7 +171,7 @@ export default function HistoryPage() {
           </p>
         ) : (
           <>
-            {/* Chart */}
+            {/* Evolution chart */}
             {chartData.length >= 2 && (
               <Card>
                 <CardContent className="p-4">
@@ -90,20 +182,8 @@ export default function HistoryPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chartData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 11 }}
-                          className="fill-muted-foreground"
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 10 }}
-                          className="fill-muted-foreground"
-                          axisLine={false}
-                          tickLine={false}
-                          tickFormatter={(v) => `${(v / 1000).toFixed(1)}k`}
-                        />
+                        <XAxis dataKey="name" tick={{ fontSize: 11 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10 }} className="fill-muted-foreground" axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(1)}k`} />
                         <Tooltip
                           formatter={(value) => [formatCurrency(Number(value)), "Total"]}
                           contentStyle={{
@@ -114,12 +194,7 @@ export default function HistoryPage() {
                             fontSize: "13px",
                           }}
                         />
-                        <ReferenceLine
-                          y={DEFAULT_GOALS.target}
-                          stroke="hsl(var(--primary))"
-                          strokeDasharray="4 4"
-                          strokeOpacity={0.5}
-                        />
+                        <ReferenceLine y={DEFAULT_GOALS.target} stroke="hsl(var(--primary))" strokeDasharray="4 4" strokeOpacity={0.5} />
                         <Bar dataKey="total" radius={[6, 6, 0, 0]} maxBarSize={36}>
                           {chartData.map((entry, i) => (
                             <Cell key={i} fill={barColors[entry.status]} />
@@ -133,45 +208,66 @@ export default function HistoryPage() {
             )}
 
             {/* Month list */}
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Meses
+            </p>
             <div className="space-y-2.5">
               {history.map((entry) => {
+                const key = `${entry.year}-${entry.month}`;
                 const total = getTotal(entry.contributions);
                 const pct = Math.min(Math.round((total / DEFAULT_GOALS.target) * 100), 100);
                 const status = getGoalStatus(total, 0);
+                const isOpen = expanded === key;
+
                 return (
-                  <Card key={`${entry.year}-${entry.month}`}>
-                    <CardContent className="p-4 space-y-2.5">
-                      <div className="flex items-center justify-between">
-                        <span className="font-[family-name:var(--font-display)] font-bold capitalize">
-                          {getMonthName(entry.month)} {entry.year}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColors[status]}`}>
-                            {getStatusLabel(status)}
-                          </span>
-                          <span className="font-[family-name:var(--font-display)] text-lg font-bold tabular-nums">
-                            {formatCurrency(total)}
-                          </span>
+                  <Card key={key} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <button
+                        onClick={() => toggleExpand(key)}
+                        className="flex w-full items-center justify-between text-left"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 font-[family-name:var(--font-display)] text-sm font-bold text-primary">
+                            {String(entry.month).padStart(2, "0")}
+                          </div>
+                          <div>
+                            <p className="font-[family-name:var(--font-display)] font-bold capitalize">
+                              {getMonthName(entry.month)} {entry.year}
+                            </p>
+                            <div className="flex gap-3 text-xs text-muted-foreground">
+                              {Object.entries(entry.contributions).map(([email, amt]) => (
+                                <span key={email}>
+                                  {NAMES[email] ?? email.split("@")[0]}: {formatCurrency(amt)}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div className="flex items-center gap-2">
+                          <div className="text-right">
+                            <p className="font-[family-name:var(--font-display)] text-lg font-bold tabular-nums">
+                              {formatCurrency(total)}
+                            </p>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColors[status]}`}>
+                              {pct}%
+                            </span>
+                          </div>
+                          <ChevronDown
+                            className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                          />
+                        </div>
+                      </button>
+
+                      {/* Progress bar (always visible) */}
+                      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div
                           className="h-full rounded-full bg-primary transition-all duration-500"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <div className="flex gap-4 text-xs text-muted-foreground">
-                        {Object.entries(entry.contributions).map(
-                          ([personEmail, personAmount]) => (
-                            <span key={personEmail}>
-                              {NAMES[personEmail] ?? personEmail.split("@")[0]}:{" "}
-                              <span className="font-medium text-foreground">
-                                {formatCurrency(personAmount)}
-                              </span>
-                            </span>
-                          ),
-                        )}
-                      </div>
+
+                      {/* Expanded detail */}
+                      {isOpen && <MonthDetail entry={entry} />}
                     </CardContent>
                   </Card>
                 );
