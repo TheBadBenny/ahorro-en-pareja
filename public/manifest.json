@@ -1,0 +1,25 @@
+{
+  "name": "Ahorro en Pareja",
+  "short_name": "Ahorro",
+  "description": "Seguimiento financiero para parejas",
+  "start_url": "/ahorro-en-pareja/",
+  "scope": "/ahorro-en-pareja/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4338ca",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/ahorro-en-pareja/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ahorro-en-pareja/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -12,24 +12,40 @@ Aplicacion web de seguimiento financiero personal para parejas, centrada en obje
 | **shadcn/ui** | Componentes UI (base-ui) |
 | **Recharts** | Graficos: barras, area, dona, radial |
 | **lucide-react** | Iconos |
-| **localStorage** | Persistencia de datos (sin backend) |
+| **Firebase Auth** | Login con Google + whitelist de emails |
+| **Cloud Firestore** | Datos compartidos entre los dos, sincronizados |
+| **PWA** | Instalable en movil, funciona offline |
 
 ## Como ejecutar
 
+### 1. Crear proyecto en Firebase
+
+1. Ve a [Firebase Console](https://console.firebase.google.com/) y crea un proyecto
+2. Activa **Authentication** > Sign-in method > Google
+3. Activa **Cloud Firestore** > Crear base de datos (modo produccion)
+4. Copia las reglas de seguridad de `firestore.rules` al panel de Firestore > Rules (reemplaza los emails)
+5. En Project Settings, copia la configuracion web
+
+### 2. Configurar variables de entorno
+
 ```bash
-# Instalar dependencias
+cp .env.local.example .env.local
+```
+
+Rellena `.env.local` con los valores de Firebase y los emails permitidos.
+
+### 3. Ejecutar
+
+```bash
 npm install
-
-# Servidor de desarrollo
 npm run dev
-
-# Build de produccion
-npm run build && npm start
 ```
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-La app carga datos de ejemplo automaticamente la primera vez. Puedes editarlos o borrarlos desde la interfaz.
+### 4. Instalar como app (PWA)
+
+En Chrome/Safari, abre la app y pulsa "Instalar" o "Anadir a pantalla de inicio".
 
 ## Funcionalidades
 

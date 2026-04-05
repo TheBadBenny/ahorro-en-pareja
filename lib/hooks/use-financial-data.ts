@@ -6,10 +6,7 @@ import {
   getAllEntries,
   saveEntry,
   deleteEntry,
-  getEntriesSorted,
-  getCurrentMonthEntry,
-} from "@/lib/storage";
-import { seedData } from "@/data/seed";
+} from "@/lib/storage/firestore";
 
 export function useFinancialData() {
   const [entries, setEntries] = useState<MonthlyFinancialEntry[]>([]);
@@ -17,36 +14,34 @@ export function useFinancialData() {
     useState<MonthlyFinancialEntry | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const refresh = useCallback(() => {
-    const sorted = getEntriesSorted();
+  const refresh = useCallback(async () => {
+    const sorted = await getAllEntries();
     setEntries(sorted);
 
-    const current = getCurrentMonthEntry();
+    const now = new Date();
+    const current =
+      sorted.find(
+        (e) => e.month === now.getMonth() + 1 && e.year === now.getFullYear(),
+      ) ?? null;
     setCurrentEntry(current);
   }, []);
 
-  // Load data on mount, seed if empty
   useEffect(() => {
-    const existing = getAllEntries();
-    if (Object.keys(existing).length === 0) {
-      seedData.forEach((entry) => saveEntry(entry));
-    }
-    refresh();
-    setIsLoaded(true);
+    refresh().then(() => setIsLoaded(true));
   }, [refresh]);
 
   const save = useCallback(
-    (entry: MonthlyFinancialEntry) => {
-      saveEntry(entry);
-      refresh();
+    async (entry: MonthlyFinancialEntry) => {
+      await saveEntry(entry);
+      await refresh();
     },
     [refresh],
   );
 
   const remove = useCallback(
-    (month: number, year: number) => {
-      deleteEntry(month, year);
-      refresh();
+    async (month: number, year: number) => {
+      await deleteEntry(month, year);
+      await refresh();
     },
     [refresh],
   );
