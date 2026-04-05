@@ -1,4 +1,4 @@
-import { DEFAULT_GOALS, type GoalStatus, type SavingsGoals } from "@/types";
+import { DEFAULT_GOALS, ANNUAL_GOAL, type GoalStatus, type SavingsGoals } from "@/types";
 
 export function getGoalStatus(total: number, daysRemaining: number): GoalStatus {
   const goals = DEFAULT_GOALS;
@@ -70,19 +70,38 @@ export function getYearlyTotal(
 export function getYearlyCumulative(
   history: { month: number; year: number; contributions: Record<string, number> }[],
   year: number,
-): { month: string; cumulative: number; monthly: number }[] {
-  const yearEntries = history
-    .filter((e) => e.year === year)
-    .sort((a, b) => a.month - b.month);
+): { month: string; monthNum: number; cumulative: number | null; ideal: number; monthly: number }[] {
+  const now = new Date();
+  const currentMonth = now.getFullYear() === year ? now.getMonth() + 1 : 12;
+  const perMonth = ANNUAL_GOAL / 12;
+
+  // Build a map of month -> total for this year
+  const monthMap = new Map<number, number>();
+  for (const e of history) {
+    if (e.year === year) {
+      monthMap.set(e.month, getTotal(e.contributions));
+    }
+  }
 
   let cumulative = 0;
-  return yearEntries.map((e) => {
-    const monthly = getTotal(e.contributions);
-    cumulative += monthly;
-    return {
-      month: getMonthName(e.month).slice(0, 3),
-      cumulative,
+  const result: { month: string; monthNum: number; cumulative: number | null; ideal: number; monthly: number }[] = [];
+
+  for (let m = 1; m <= 12; m++) {
+    const monthly = monthMap.get(m) ?? 0;
+    const hasPassed = m <= currentMonth;
+
+    if (hasPassed) {
+      cumulative += monthly;
+    }
+
+    result.push({
+      month: getMonthName(m).slice(0, 3),
+      monthNum: m,
+      cumulative: hasPassed ? cumulative : null,
+      ideal: Math.round(perMonth * m),
       monthly,
-    };
-  });
+    });
+  }
+
+  return result;
 }

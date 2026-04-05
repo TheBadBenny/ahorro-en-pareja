@@ -274,11 +274,7 @@ export default function HistoryPage() {
               const yearlyTotal = getYearlyTotal(history, currentYear);
               const yearlyPct = Math.min(Math.round((yearlyTotal / ANNUAL_GOAL) * 100), 100);
               const yearlyRemaining = Math.max(ANNUAL_GOAL - yearlyTotal, 0);
-              const cumulativeData = getYearlyCumulative(history, currentYear);
-              const idealPace = cumulativeData.map((d, i) => ({
-                ...d,
-                ideal: Math.round((ANNUAL_GOAL / 12) * (i + 1)),
-              }));
+              const annualData = getYearlyCumulative(history, currentYear);
 
               return (
                 <Card>
@@ -316,39 +312,40 @@ export default function HistoryPage() {
                       </span>
                     </div>
 
-                    {cumulativeData.length >= 2 && (
-                      <div className="h-[160px] pt-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={idealPace} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                            <defs>
-                              <linearGradient id="gradCumulH" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                            <XAxis dataKey="month" tick={{ fontSize: 10 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
-                            <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                            <Tooltip
-                              formatter={(value, name) => [
+                    <div className="h-[180px] pt-2">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={annualData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="gradCumulH" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
+                          <XAxis dataKey="month" tick={{ fontSize: 10 }} className="fill-muted-foreground" axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 9 }} className="fill-muted-foreground" axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} domain={[0, ANNUAL_GOAL]} />
+                          <Tooltip
+                            formatter={(value, name) => {
+                              if (value === null || value === undefined) return ["-", ""];
+                              return [
                                 formatCurrency(Number(value)),
                                 name === "cumulative" ? "Acumulado" : "Ritmo ideal",
-                              ]}
-                              contentStyle={{
-                                borderRadius: "10px",
-                                border: "1px solid hsl(var(--border))",
-                                backgroundColor: "hsl(var(--card))",
-                                color: "hsl(var(--card-foreground))",
-                                fontSize: "12px",
-                              }}
-                            />
-                            <ReferenceLine y={ANNUAL_GOAL} stroke="hsl(155, 70%, 45%)" strokeDasharray="4 4" strokeOpacity={0.4} />
-                            <Area type="monotone" dataKey="ideal" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={1.5} fill="none" dot={false} />
-                            <Area type="monotone" dataKey="cumulative" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#gradCumulH)" dot={{ r: 3, fill: "hsl(var(--primary))" }} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
+                              ];
+                            }}
+                            contentStyle={{
+                              borderRadius: "10px",
+                              border: "1px solid hsl(var(--border))",
+                              backgroundColor: "hsl(var(--card))",
+                              color: "hsl(var(--card-foreground))",
+                              fontSize: "12px",
+                            }}
+                          />
+                          <ReferenceLine y={ANNUAL_GOAL} stroke="hsl(155, 70%, 45%)" strokeDasharray="4 4" strokeOpacity={0.5} label={{ value: "40k", position: "right", fontSize: 9, fill: "hsl(155, 70%, 45%)" }} />
+                          <Area type="monotone" dataKey="ideal" stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" strokeWidth={1.5} strokeOpacity={0.5} fill="none" dot={false} connectNulls />
+                          <Area type="monotone" dataKey="cumulative" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#gradCumulH)" dot={{ r: 4, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--card))" }} activeDot={{ r: 6 }} connectNulls={false} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
                   </CardContent>
                 </Card>
               );
