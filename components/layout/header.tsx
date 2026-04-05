@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun, PiggyBank, LogOut } from "lucide-react";
+import { Moon, Sun, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/hooks/use-theme";
 import { useAuth } from "@/lib/auth";
@@ -14,11 +14,9 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary shadow-sm">
-            <PiggyBank className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <span className="text-2xl" role="img" aria-label="culete">🐷</span>
           <span className="font-[family-name:var(--font-display)] text-base font-bold tracking-tight">
-            Ahorro
+            Culete
           </span>
         </Link>
 

@@ -3,7 +3,6 @@
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { PiggyBank } from "lucide-react";
 
 export function LoginScreen() {
   const { signInWithGoogle, error } = useAuth();
@@ -12,13 +11,11 @@ export function LoginScreen() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-background to-background p-4">
       <Card className="w-full max-w-xs shadow-xl shadow-primary/5">
         <CardContent className="flex flex-col items-center gap-7 p-8">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-lg shadow-primary/25">
-            <PiggyBank className="h-8 w-8 text-primary-foreground" />
-          </div>
+          <span className="text-6xl" role="img" aria-label="culete">🐷</span>
 
           <div className="text-center">
             <h1 className="font-[family-name:var(--font-display)] text-2xl font-extrabold tracking-tight">
-              Ahorro en Pareja
+              Culete
             </h1>
             <p className="mt-1.5 text-sm text-muted-foreground">
               Vuestro seguimiento financiero

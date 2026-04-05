@@ -1,12 +1,12 @@
 {
-  "name": "Ahorro en Pareja",
-  "short_name": "Ahorro",
+  "name": "Culete",
+  "short_name": "Culete",
   "description": "Seguimiento financiero para parejas",
   "start_url": "/ahorro-en-pareja/",
   "scope": "/ahorro-en-pareja/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4338ca",
+  "theme_color": "#6342da",
   "orientation": "portrait-primary",
   "icons": [
     {

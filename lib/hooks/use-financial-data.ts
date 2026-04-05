@@ -33,8 +33,8 @@ export function useFinancialData() {
   }, [refresh]);
 
   const save = useCallback(
-    async (email: string, amount: number) => {
-      await saveContribution(month, year, email, amount);
+    async (email: string, amount: number, targetMonth?: number, targetYear?: number) => {
+      await saveContribution(targetMonth ?? month, targetYear ?? year, email, amount);
       await refresh();
     },
     [month, year, refresh],

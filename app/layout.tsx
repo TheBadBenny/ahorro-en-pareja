@@ -15,13 +15,13 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Ahorro en Pareja",
-  description: "Seguimiento financiero para parejas.",
+  title: "Culete",
+  description: "Seguimiento financiero para parejas",
   manifest: "/ahorro-en-pareja/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Ahorro en Pareja",
+    title: "Culete",
   },
 };
 
