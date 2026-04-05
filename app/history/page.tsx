@@ -222,9 +222,9 @@ export default function HistoryPage() {
   }
 
   // Calculate which past months are missing (last 12 months)
-  const now = new Date();
-  const existingKeys = new Set(history.map((e) => `${e.year}-${e.month}`));
   const missingMonths = useMemo(() => {
+    const now = new Date();
+    const existingKeys = new Set(history.map((e) => `${e.year}-${e.month}`));
     const missing: { month: number; year: number; label: string }[] = [];
     for (let i = 1; i <= 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -235,8 +235,7 @@ export default function HistoryPage() {
       }
     }
     return missing;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [history.length]);
+  }, [history]);
 
   async function handleAddPastMonth() {
     if (!selectedPastMonth || !newMonthAmount) return;

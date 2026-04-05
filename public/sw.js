@@ -1,4 +1,4 @@
-const CACHE_NAME = "ahorro-v1";
+const CACHE_NAME = "culete-v2";
 
 const PRECACHE_URLS = ["/ahorro-en-pareja/"];
 
